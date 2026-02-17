@@ -1,8 +1,8 @@
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from bson import ObjectId
 
-from api.database import get_platos_collection
+from api.database import get_platos_collection, get_tasks_collection
 from models.dish import DishCreate, DishResponse
 
 router = APIRouter()

@@ -1,7 +1,7 @@
 from fastapi import FastAPI 
 
-app = FastAPI()
+app = FastAPI() #Inicializar instancia de FastAPI
 
-@app.get("/")
-def read_rood():
+@app.get("/") #Decordador que define la ruta principal de la API
+def read_root():
     return{"message": "Hello World"}
