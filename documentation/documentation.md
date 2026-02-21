@@ -156,3 +156,11 @@ tarea1/
 │   ├── dish.py          # Pydantic: Plato, PlatoCreate, etc.
 │   └── task.py          # Pydantic: TaskResponse, TaskStatus
 └── requirements.txt
+
+
+Para Arrancar el servidor, debemos usar el siguiente comando:
+    uvicorn api.main:app --reload
+
+    Esto es que usaremos la carpeta api, donde dentro hay un archivo main, con una
+    función app que inicializa la instancia de FastAPI, y --reload para recargar el servidor cada vez que realicemos un cambio dentro de las carpetas
+

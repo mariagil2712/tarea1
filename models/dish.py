@@ -1,20 +1,17 @@
+#Archivo encargado de interactuar con la base de datos
+#BaseModel es un modelo de pydantic que permite definir un modelo base para el plato
 from pydantic import BaseModel
-from datetime import datetime
 
-# Modelo del plato, lo que se va a enviar al cliente
-class DishCreate(BaseModel):
+#Clase para lo que uno postea, que requiere de un body que valida el JSON del cuerpo contra un modelo establecido
+class DishPost(BaseModel):
+    id: str
     name: str
     price: float
-    ingredients: list[str] = []
-    creation: int = int(datetime.timestamp(datetime.now()))
-    updatedAt: int = int(datetime.timestamp(datetime.now()))
+    ingredients: list[str]
 
-#Plato como lo devolverá la API
+#Clase para lo que uno obtiene, se declara con response_model en el router
 class DishResponse(BaseModel):
     id: str
     name: str
     price: float
-    ingredients: list[str] = []
-
-    class Config:
-        from_attributes = True
+    ingredients: list[str]
