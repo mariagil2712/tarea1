@@ -1,25 +1,42 @@
 from fastapi import APIRouter, HTTPException #Librerías utilizadas para que FastAPI devuelva una respuesta de error con codigo HTTP y un mensaje 
 from schemas.dishSchema import dishesEntity, dishEntity
-from api.database import get_dishes_collection
-from models.dish import DishResponse, DishPost
+from api.database import get_dishes_collection, get_tasks_collection
+from models.dish import DishResponse, DishCreate
+from datetime import datetime
+from api.rabbitmq import publish_dish_task
 
 from bson import ObjectId #Librería utilizada para convertir el id de la base de datos a un objeto ObjectId, para que 
                             #cuando mongoDB busque un iD, (su identificador es "_id") sea correspondiente a su tipo ObjectId
+import uuid #Librería utilizada para generar UUIDs unicos
 
 #APIRouter es un modulo de FastAPI que permite crear y definir rutas para la API
 dish = APIRouter() 
+
 #Response Model es un decorador que permite especificar el modelo de respuesta que se va a devolver, ideal para documentación en Swagger
-@dish.get("/dish", response_model=DishResponse)
+@dish.get("/", response_model=list[DishResponse])
 def get_dishes():
     collection = get_dishes_collection()
     it = collection.find() #Puntero sobre el resultado de la consulta
     return dishesEntity(list(it))
 
-@dish.post("dish")
-def create_dish():
-    return "hello world"
+@dish.post("/")
+def create_dish(body: DishCreate):
+    taskId = str(uuid.uuid4()) #Genera un UUID unico para la tarea
+    payload = body.model_dump()
+    task = {
+        "taskId": taskId,
+        "status": "running",
+        "payload": payload,
+        "error": None,
+        "createdAt": int(datetime.timestamp(datetime.now())),
+        "updatedAt": int(datetime.timestamp(datetime.now())),
+    }
+    tasks_collection = get_tasks_collection()
+    tasks_collection.insert_one(task)
+    publish_dish_task(taskId, payload)
+    return{"taskId": taskId, "status": "running"}
 
-@dish.get("/dish/{dish_id}")
+@dish.get("/{dish_id}")
 def get_dish(dish_id: str):
     try: #Primero verifica que el iD sea valido, que esté en el formato valid de ObjectId(24 caracteres hexadecimales)
         oId = ObjectId(dish_id)

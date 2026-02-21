@@ -1,7 +1,9 @@
+import os
 from pymongo import MongoClient
 
 # Creacion de cliente con URI conectada a la base de datos de mongoDB compass
-client = MongoClient("mongodb://admin:admin123@localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://admin:admin123@localhost:27017/")
+client = MongoClient(MONGO_URI)
 #Seleccionar la base de datos
 db = client.tarea1_db
 
