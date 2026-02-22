@@ -4,6 +4,7 @@ from api.database import get_dishes_collection, get_tasks_collection
 from models.dish import DishResponse, DishCreate
 from datetime import datetime
 from api.rabbitmq import publish_dish_task
+from pymongo import ReturnDocument 
 
 from bson import ObjectId #Librería utilizada para convertir el id de la base de datos a un objeto ObjectId, para que 
                             #cuando mongoDB busque un iD, (su identificador es "_id") sea correspondiente a su tipo ObjectId
@@ -48,3 +49,41 @@ def get_dish(dish_id: str):
         raise HTTPException(status_code=404, detail=f"No Dish Found with iD: {dish_id}")
     return dishEntity(it)
 
+@dish.put("/{dish_id}", response_model=DishResponse)
+def update_dish(dish_id: str, body: DishCreate):
+    try:
+        oId = ObjectId(dish_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid dishId format")
+    
+    collection = get_dishes_collection()
+    updated = collection.find_one_and_update(
+        {"_id": oId},
+        {"$set": body.model_dump()},
+        return_document=ReturnDocument.AFTER  # Retorna el documento ya actualizado
+    )
+    if updated is None:
+        raise HTTPException(status_code=404, detail=f"No Dish Found with iD: {dish_id}")
+    return dishEntity(updated)
+
+
+@dish.delete("/{dish_id}")
+def delete_dish(dish_id: str):
+    try:
+        ObjectId(dish_id)  # Solo valida el formato, no busca aún
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid dishId format")
+    
+    taskId = str(uuid.uuid4())
+    task = {
+        "taskId": taskId,
+        "status": "running",
+        "payload": {"dish_id": dish_id},
+        "error": None,
+        "createdAt": int(datetime.timestamp(datetime.now())),
+        "updatedAt": int(datetime.timestamp(datetime.now())),
+    }
+    tasks_collection = get_tasks_collection()
+    tasks_collection.insert_one(task)
+    publish_dish_task(taskId, {"action": "delete", "dish_id": dish_id})
+    return {"taskId": taskId, "status": "running"}
