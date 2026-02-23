@@ -7,6 +7,8 @@ Verificar imágenes:           docker images
 
 2.	Docker descarga la imagen mongo y crea un contenedor, inicia el proceso mongodb con el puerto y las credenciales correspondientes
 
+
+Para levantar contenedor con mongoDB
 docker run -d \
 --name mongo_cloud \
 -p 27017:27017 \
@@ -14,10 +16,11 @@ docker run -d \
 -e MONGO_INITDB_ROOT_PASSWORD=admin123 \
 mongo:latest
 
-Haciendo docker ps aparece ahora:
- 
- 
- 
+Para levantar contenedor con RabbitMQ
+docker-compose up -d 
+Esto es porque buscamos levantar servicios, no contenedores
+
+Haciendo docker ps aparece ahora: 
 
 En este punto la maquina ya puede conectarse usando localhost:27017
 

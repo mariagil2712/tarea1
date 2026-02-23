@@ -87,3 +87,10 @@ def delete_dish(dish_id: str):
     tasks_collection.insert_one(task)
     publish_dish_task(taskId, {"action": "delete", "dish_id": dish_id})
     return {"taskId": taskId, "status": "running"}
+
+"""
+Debido a que el diseño es el que establece la asincronía, ya que la API no es el que
+hace ni el Post ni el Delete, sino que se encarga de publicar la tarea
+en la cola de RabbitMQ, para que el worker la procese y este si sea
+el que realice la acción de insertar o eliminar el plato en la base de datos
+"""

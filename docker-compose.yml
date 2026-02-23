@@ -16,7 +16,7 @@ services:
 
   mongodb:
     image: mongo:latest
-    container_name: mongo_cloud
+    container_name: mongoCloud
     ports:
       - "27017:27017"
     environment:
@@ -61,4 +61,4 @@ services:
         condition: service_healthy
       mongodb:
         condition: service_healthy
-    command: python worker.py   
+    command: python api/worker.py   

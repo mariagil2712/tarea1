@@ -59,7 +59,8 @@ def process_message(ch, method, properties, body):
 
     except Exception as e:
         print(f"[Worker] Error procesando mensaje: {e}")
-        update_task(message.get("taskId", "unknown"), "error", str(e))
+        if task_id != "unknown":
+            update_task(task_id, "error", str(e))
         ch.basic_ack(delivery_tag=method.delivery_tag)  # ACK igual para sacar el mensaje de la cola
 
 
