@@ -15,10 +15,13 @@ docker run -d \
 -e MONGO_INITDB_ROOT_USERNAME=admin \
 -e MONGO_INITDB_ROOT_PASSWORD=admin123 \
 mongo:latest
+Esto es si queremos levantar un solo servicio
 
-Para levantar contenedor con RabbitMQ
+
+Para levantar varios servicios como usamos en este proyecto:
 docker-compose up -d 
-Esto es porque buscamos levantar servicios, no contenedores
+Esto es porque buscamos levantar servicios, no contenedores, y estos deben estar separados
+Para el uso de buenas practicas, y esto se define en el archivo docker-compose.yml
 
 Haciendo docker ps aparece ahora: 
 
