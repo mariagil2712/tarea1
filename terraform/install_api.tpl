@@ -15,8 +15,25 @@ sudo systemctl enable docker # Activa Docker en cada boot (fuente: systemctl ena
 sudo systemctl start docker # Inicia Docker en el arranque inicial (fuente: systemctl start)
 sudo usermod -aG docker ec2-user || true # Añade ec2-user al grupo docker, tolerando si ya existe (fuente: Docker post-install)
 
-# Tiempo para que RabbitMQ/Mongo terminen su user_data en las otras EC2
-sleep 60 # Espera a que RabbitMQ/Mongo finalicen su inicialización (fuente: dependencia entre servicios)
+wait_for_port() {
+  local host=$1 port=$2
+  local i
+  for i in $(seq 1 36); do
+    if timeout 2 bash -c "echo >/dev/tcp/$${host}/$${port}" 2>/dev/null; then
+      echo "[wait] $${host}:$${port} disponible"
+      return 0
+    fi
+    echo "[wait] esperando $${host}:$${port}... ($${i}/36)"
+    sleep 10
+  done
+  echo "[wait] TIMEOUT $${host}:$${port}"
+  return 1
+}
+
+# Rabbit/Mongo instalan paquetes vía dnf; 60s suele ser insuficiente en t3.micro
+sleep 90
+wait_for_port "${rabbit_private_ip}" 5672
+wait_for_port "${mongo_private_ip}" 27017
 
 cd /home/ec2-user # Cambia a carpeta de trabajo del usuario EC2 (fuente: convención Amazon Linux)
 rm -rf restaurant-api # Limpia versión previa del repositorio para despliegue limpio (fuente: bootstrap idempotente)

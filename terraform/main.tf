@@ -35,6 +35,11 @@ locals {                                                           # Define valo
     mongo_private_ip  = aws_instance.mongodb.private_ip            # Inserta IP privada de instancia MongoDB (fuente: aws_instance.private_ip)
     git_repo_url      = var.git_repo_url                           # Inserta URL de repositorio parametrizable (fuente: Terraform variable interpolation)
   })
+  worker_user_data = templatefile("${path.module}/install_worker.tpl", {
+    rabbit_private_ip = aws_instance.rabbitmq.private_ip
+    mongo_private_ip  = aws_instance.mongodb.private_ip
+    git_repo_url      = var.git_repo_url
+  })
 }
 
 # -----------------------------------------------------------------------------
@@ -64,7 +69,8 @@ resource "aws_instance" "worker" {                                       # Crea 
   key_name                    = var.key_name                             # Clave SSH para administración manual (fuente: AWS EC2)
   subnet_id                   = var.subnets[0]                           # Se despliega en subnet principal definida (fuente: arquitectura actual)
   vpc_security_group_ids      = [aws_security_group.worker_sg.id]        # Aplica reglas de red del worker (fuente: SG separation of concerns)
-  user_data                   = file("${path.module}/install_worker.sh") # Provisiona dependencias y ejecuta worker al iniciar (fuente: EC2 user_data)
+  user_data                   = local.worker_user_data                   # Provisiona dependencias y ejecuta worker al iniciar (fuente: EC2 user_data)
+  user_data_replace_on_change = true
   associate_public_ip_address = true                                     # Habilita IP pública para soporte/labs (fuente: configuración actual del proyecto)
 
   tags = {                         # Etiquetas para identificar la instancia worker (fuente: AWS tags)
@@ -111,6 +117,8 @@ resource "aws_instance" "mongodb" {                                       # Crea
 
 resource "aws_instance" "api_server" { # Crea réplicas EC2 de la API detrás del ALB (fuente: patrón escalado horizontal)
   count = 2                            # Número de instancias API para alta disponibilidad mínima (fuente: AWS ALB multi-target)
+
+  user_data_replace_on_change = true   # Reemplaza instancia si cambia user_data (user_data no se reejecuta en updates in-place)
 
   ami                         = var.ami_id                     # AMI base común para las dos réplicas (fuente: variable compartida)
   instance_type               = var.instance_type              # Tamaño de instancia de API (fuente: configuración por variable)
